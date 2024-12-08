@@ -3,18 +3,41 @@ import React, { useState } from "react";
 import { uploadToPinata } from "./uploadPinata";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
-import { clusterApiUrl } from "@solana/web3.js";
 import { walletAdapterIdentity } from "@metaplex-foundation/umi-signer-wallet-adapters";
 import {
   createNft,
   mplTokenMetadata,
 } from "@metaplex-foundation/mpl-token-metadata";
-import { useEffect } from "react";
 import { generateSigner, percentAmount } from "@metaplex-foundation/umi";
+import Image from "next/image";
+
+
+interface FileProperties {
+  uri: string,
+  type: string,
+}
+interface Attributes {
+  trait_type: string,
+  value: string | number
+}
+
+interface Creator {
+  address: string | null,
+  share: number
+}
+interface Metadata {
+  attributes: Attributes[],
+  properties: {
+    files: FileProperties[],
+    creators: Creator[],
+  },
+  image: string,
+
+}
 
 /* ---------- This is the main function to Create Nft with actions----------*/
 const CreateNft = () => {
-  const [imageFile, setImageFile] = useState(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [cardType, setCardType] = useState<string>("");
@@ -22,8 +45,8 @@ const CreateNft = () => {
   const wallet = useWallet();
   const address = wallet.publicKey?.toBase58() || null;
 
-  const handleImageChange = (event: any) => {
-    const file = event.target.files[0];
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (file) {
       setImageFile(file);
     }
@@ -100,7 +123,7 @@ const CreateNft = () => {
     imageUrl: string,
     address: string | null
   ) => {
-    let metadata: any = {
+    const metadata: Metadata = {
       attributes: [],
       properties: {
         files: [
@@ -172,7 +195,7 @@ const CreateNft = () => {
       {imageUrl && (
         <div>
           <h2>Uploaded Image:</h2>
-          <img src={imageUrl} alt="Uploaded" width="200" />
+          <Image src={imageUrl} alt="Uploaded" width="200" />
           <p>
             IPFS URL:{" "}
             <a href={imageUrl} target="_blank" rel="noopener noreferrer">

@@ -1,25 +1,41 @@
 "use client";
 import { useMotionValue } from "framer-motion";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ReactNode } from "react";
 import { useMotionTemplate, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { MotionValue } from "framer-motion";
+
+interface IconProps extends React.SVGProps<SVGSVGElement> {
+  className?: string;
+}
+
+interface EvervaultCardProps {
+  className?: string;
+  children: ReactNode;
+}
+interface CardPatternProps {
+  mouseX: MotionValue<number>; // Typing as MotionValue for motion values
+  mouseY: MotionValue<number>; // Typing as MotionValue for motion values
+  randomString: string;
+}
 
 export const EvervaultCard = ({
-  className="",
+  className = "",
   children
-}:{ className:string,children:any}) => {
-  let mouseX = useMotionValue(0);
-  let mouseY = useMotionValue(0);
+}: EvervaultCardProps) => {
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
 
   const [randomString, setRandomString] = useState("");
 
   useEffect(() => {
-    let str = generateRandomString(1500);
+    const str = generateRandomString(1500);
     setRandomString(str);
   }, []);
 
-  function onMouseMove({ currentTarget, clientX, clientY }: any) {
-    let { left, top } = currentTarget.getBoundingClientRect();
+  function onMouseMove(event: React.MouseEvent<HTMLDivElement, MouseEvent>) {
+    const { currentTarget, clientX, clientY } = event;
+    const { left, top } = currentTarget.getBoundingClientRect();
     mouseX.set(clientX - left);
     mouseY.set(clientY - top);
 
@@ -42,13 +58,13 @@ export const EvervaultCard = ({
           mouseX={mouseX}
           mouseY={mouseY}
           randomString={randomString}
-          
+
         />
         <div className="relative z-10 flex items-center justify-center">
           <div className="relative h-44 w-44  rounded-full flex items-center justify-center text-white font-bold text-4xl">
             <div className="absolute w-full h-full bg-white/[0.8] dark:bg-black/[0.8] blur-sm rounded-full" />
             <div className="z-20 ">
-            {children}
+              {children}
             </div>
           </div>
         </div>
@@ -57,10 +73,9 @@ export const EvervaultCard = ({
   );
 };
 
-export function CardPattern({ mouseX, mouseY, randomString }: any) {
-  let maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
-  let defaultMaskImage = `radial-gradient(250px at 50% 50%, white, transparent)`;
-  let style = { maskImage, WebkitMaskImage: maskImage };
+export function CardPattern({ mouseX, mouseY, randomString }: CardPatternProps) {
+  const maskImage = useMotionTemplate`radial-gradient(250px at ${mouseX}px ${mouseY}px, white, transparent)`;
+  const style = { maskImage, WebkitMaskImage: maskImage };
 
   return (
     <div className="pointer-events-none">
@@ -91,7 +106,7 @@ export const generateRandomString = (length: number) => {
   return result;
 };
 
-export const Icon = ({ className, ...rest }: any) => {
+export const Icon = ({ className, ...rest }: IconProps) => {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

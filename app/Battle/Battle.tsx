@@ -1,6 +1,7 @@
 "use client"
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { io, Socket } from "socket.io-client";
 
 interface Player {
@@ -63,7 +64,7 @@ const Battle = ( {nfts}:{nfts:NFT[]}) => {
                 className={`card ${selectedCards.includes(card.image) ? "selected" : ""}`}
                 onClick={() => handleCardSelect(card.image)}
               >
-                <img src={card.image} alt={card.image} />
+                <Image src={card.image} alt={card.image} />
                 <p>{card.image}</p>
               </div>
             ))}

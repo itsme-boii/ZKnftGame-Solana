@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { EvervaultCard, Icon } from "@/components/ui/evervault-card";
 import { BackgroundBeamsWithCollision } from "@/components/ui/background-beams-with-collision";
 import { useRouter } from 'next/navigation'
-import { useState, useEffect, useCallback } from "react"
+import { useEffect, useCallback } from "react"
 import { useWallet } from "@solana/wallet-adapter-react";
 
 const WalletMultiButton = dynamic(
@@ -16,10 +16,7 @@ const WalletMultiButton = dynamic(
 
 export default function Home() {
   const wallet = useWallet();
-  const [isConnected, setIsConnected] = useState(false);
   const router = useRouter();
-  const [connectionError, setConnectionError] = useState<string | null>(null);
-
   useEffect(() => {
     if (wallet.connected) {
       router.push("/Dashboard")
@@ -30,14 +27,9 @@ export default function Home() {
     try {
       if (!wallet.connected) {
         await wallet.connect();
-        setIsConnected(true);
       }
-    } catch (error: any) {
-      if (error.message.includes("User rejected the request")) {
-        setConnectionError("Wallet connection was rejected.");
-      } else {
-        setConnectionError("An error occurred while connecting the wallet.");
-      }
+    } catch {
+      alert("Error connecting wallet")
     }
   }, [wallet]);
 

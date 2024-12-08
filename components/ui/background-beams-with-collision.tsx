@@ -177,7 +177,7 @@ const CollisionMechanism = React.forwardRef<
     <>
       <motion.div
         key={beamKey}
-        ref={beamRef}
+        ref={ref} 
         animate="animate"
         initial={{
           translateY: beamOptions.initialY || "-200px",

@@ -1,5 +1,5 @@
 "use client"
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { FocusCards } from "@/components/ui/focus-cards";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/moving-border";
@@ -18,17 +18,14 @@ import { Connection } from "@solana/web3.js";
 import { publicKey } from "@metaplex-foundation/umi";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { fetchAllDigitalAssetWithTokenByOwner } from "@metaplex-foundation/mpl-token-metadata";
-import CreateNft from "../SolanaFiles/Solana/CreateBlob";
-import  Battle from "../Battle/Battle"
+// import CreateNft from "../SolanaFiles/Solana/CreateBlob";
+// import Battle from "../Battle/Battle"
+import { io, Socket } from "socket.io-client";
 
 
 interface NFTs {
   name: string,
   symbol: string,
-  uri: string
-}
-
-interface URI {
   uri: string
 }
 
@@ -44,8 +41,12 @@ interface Attributes {
   trait_type: string,
   value: string
 }
+const url = "http://localhost:3001"
 
-const page = () => {
+
+const Page = () => {
+  const socketRef = useRef<Socket | null>(null);
+
   const wallet = useWallet();
   const links = [
     {
@@ -82,16 +83,59 @@ const page = () => {
   const [open, setOpen] = useState(false);
   const [owner, setOwner] = useState<string | null>(null);
   const [metadata, setMetadata] = useState<Metadata[] | null>([]);
-  console.log("wallet is ", wallet)
+  // console.log("wallet is ", wallet)
   const [nft, setNft] = useState<NFTs[] | null>(null);
+  const [playerCount, setPlayerCount] = useState(0);
 
 
   const router = useRouter();
 
+  // useEffect(()=>{
+  //   socket.on("connect",()=>{
+  //     console.log("Connected to server, socket ID:", socket.id)
+  //     socket.emit("getPlayerCount",(count:number)=>{
+  //       console.log("player count is ",count);
+  //     })
+  //   })
+  //   return () => {
+  //     console.log("disconnected")
+  //     socket.off("connect");
+  //   };
+
+
+  // },[socket])
+
+  useEffect(() => {
+    console.log("Wallet connected state on refresh is ", wallet.connected)
+    if (wallet.connected) {
+      if (!socketRef.current) {
+        socketRef.current = io(url, { transports: ["websocket"] });
+
+        socketRef.current.on("connect", () => {
+          console.log("Connected to server, socket ID:", socketRef.current?.id);
+        });
+
+      }
+      socketRef.current.on("playerCount", (count) => {
+        console.log("count is ", count);
+        setPlayerCount(count);
+      })
+    }
+
+    return () => {
+      if (socketRef.current) {
+        console.log("Disconnecting socket");
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+
+  }, [wallet.connected])
+
   const handleLogout = async () => {
     wallet.disconnect();
-    console.log("wallet disconnected");
-    router.push("/Login");
+    // console.log("wallet disconnected");
+    router.push("/LLogin");
   }
 
   useEffect(() => {
@@ -106,7 +150,7 @@ const page = () => {
     if (!wallet.connected) {
       router.push("/Login")
     }
-  }, [wallet.connected])
+  }, [wallet.connected,router])
 
 
   useEffect(() => {
@@ -144,6 +188,7 @@ const page = () => {
         uri: data.metadata.uri,
       }))
       setNft(filteredData);
+      console.log("nfts are ",nft);
 
       const metadataPromises = filteredData.map(async (nft) => fetchMetadata(nft.uri));
       const metadataResults = await Promise.all(metadataPromises);
@@ -165,7 +210,7 @@ const page = () => {
           }
         })
       setMetadata(metadata);
-      console.log('Fetched metadata for NFTs:', metadata);
+      // console.log('Fetched metadata for NFTs:', metadata);
     } catch (error) {
       console.error("Error fetching NFTs:", error);
     }
@@ -174,13 +219,13 @@ const page = () => {
 
   const fetchMetadata = async (uri: string) => {
     try {
-      console.log("Fetching metadata for uri:", uri);
+      // console.log("Fetching metadata for uri:", uri);
       const response = await fetch(uri);
       if (!response.ok) {
         throw new Error("Failed to fetch metadata");
       }
       const metadata = await response.json();
-      console.log("Metadata is", metadata);
+      // console.log("Metadata is", metadata);
       return metadata;
 
     } catch (error) {
@@ -195,7 +240,7 @@ const page = () => {
 
   return (
     <div>
-      
+
 
       <div
         className={cn(
@@ -203,7 +248,7 @@ const page = () => {
           "h-screen "
         )}
       >
-    
+
 
         <Sidebar open={open} setOpen={setOpen} animate={true}>
 
@@ -223,19 +268,23 @@ const page = () => {
         </Sidebar>
 
         <div className="flex flex-col w-full space-y-10">
-          {metadata && metadata.length > 0 && (
-            <Battle nfts={metadata} />
-          )}
 
           {metadata && metadata.length > 0 && (
             <div className="p-5 flex flex-col justify-center items-center space-y-5 ">
+              <div className='flex flex-row'>
               <Button>Personal NFT Collection</Button>
+
+              <div className=' absolute font-bold text-lg top-6 right-10 '>
+              <p className='text-white'>Live Players: {playerCount}</p>
+              </div>
+              </div>
+           
               <TextGenerateEffect words={words} />
 
             </div>
           )}
 
-          
+
 
 
           {metadata && metadata.length > 0 ? (
@@ -253,4 +302,4 @@ const page = () => {
   );
 }
 
-export default page
+export default Page

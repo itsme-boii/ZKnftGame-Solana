@@ -165,7 +165,7 @@ export const SidebarLink = ({
   props?: LinkProps;
 }) => {
   const { open, animate } = useSidebar();
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = () => {
     if (link.onClick) {
       link.onClick(); // Trigger the onClick if it exists
     }
